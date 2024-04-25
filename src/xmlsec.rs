@@ -8,22 +8,19 @@ use crate::lazy_static;
 use std::ptr::null;
 use std::sync::Mutex;
 
-
 lazy_static! {
     static ref XMLSEC: Mutex<Option<XmlSecContext>> = Mutex::new(None);
 }
 
-
-pub fn guarantee_xmlsec_init()
-{
-    let mut inner = XMLSEC.lock()
+pub fn guarantee_xmlsec_init() {
+    let mut inner = XMLSEC
+        .lock()
         .expect("Unable to lock global xmlsec initalization wrapper");
 
     if inner.is_none() {
         *inner = Some(XmlSecContext::new());
     }
 }
-
 
 /// XmlSec Global Context
 ///
@@ -34,12 +31,9 @@ pub fn guarantee_xmlsec_init()
 /// [globals]: globals
 struct XmlSecContext {}
 
-
-impl XmlSecContext
-{
+impl XmlSecContext {
     /// Runs xmlsec initialization and returns instance of itself.
-    pub fn new() -> Self
-    {
+    pub fn new() -> Self {
         init_xmlsec();
         init_crypto_app();
         init_crypto();
@@ -48,34 +42,40 @@ impl XmlSecContext
     }
 }
 
-
-impl Drop for XmlSecContext
-{
-    fn drop(&mut self)
-    {
+impl Drop for XmlSecContext {
+    fn drop(&mut self) {
         cleanup_crypto();
         cleanup_crypto_app();
         cleanup_xmlsec();
     }
 }
 
-
 /// Init xmlsec library
-fn init_xmlsec()
-{
+fn init_xmlsec() {
     let rc = unsafe { bindings::xmlSecInit() };
 
     if rc < 0 {
         panic!("XmlSec failed initialization");
     }
-}
 
+    let version = unsafe {
+        bindings::xmlSecCheckVersionExt(
+            bindings::XMLSEC_VERSION_MAJOR as i32,
+            bindings::XMLSEC_VERSION_MINOR as i32,
+            bindings::XMLSEC_VERSION_SUBMINOR as i32,
+            bindings::xmlSecCheckVersionMode_xmlSecCheckVersionABICompatible,
+        )
+    };
+
+    if version != 1 {
+        panic!("Error: loaded xmlsec library version is not compatible.");
+    }
+}
 
 /// Load default crypto engine if we are supporting dynamic loading for
 /// xmlsec-crypto libraries. Use the crypto library name ("openssl",
 /// "nss", etc.) to load corresponding xmlsec-crypto library.
-fn init_crypto_app()
-{
+fn init_crypto_app() {
     // if bindings::XMLSEC_CRYPTO_DYNAMIC_LOADING
     // {
     //     let rc = unsafe { bindings::xmlSecCryptoDLLoadLibrary(0) };
@@ -93,35 +93,29 @@ fn init_crypto_app()
     }
 }
 
-
 /// Init xmlsec-crypto library
-fn init_crypto()
-{
+fn init_crypto() {
     let rc = unsafe { bindings::xmlSecOpenSSLInit() };
 
     if rc < 0 {
-        panic!("XmlSec failed while loading default crypto backend. \
-               Make sure that you have it installed and check shread libraries path");
+        panic!(
+            "XmlSec failed while loading default crypto backend. \
+               Make sure that you have it installed and check shread libraries path"
+        );
     }
 }
 
-
 /// Shutdown xmlsec-crypto library
-fn cleanup_crypto()
-{
+fn cleanup_crypto() {
     unsafe { bindings::xmlSecOpenSSLShutdown() };
 }
 
-
 /// Shutdown crypto library
-fn cleanup_crypto_app()
-{
+fn cleanup_crypto_app() {
     unsafe { bindings::xmlSecOpenSSLAppShutdown() };
 }
 
-
 /// Shutdown xmlsec library
-fn cleanup_xmlsec()
-{
+fn cleanup_xmlsec() {
     unsafe { bindings::xmlSecShutdown() };
 }
