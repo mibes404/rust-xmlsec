@@ -2,15 +2,10 @@
 //! Central XmlSec1 Context
 //!
 use crate::bindings;
-
-use crate::lazy_static;
-
 use std::ptr::null;
 use std::sync::Mutex;
 
-lazy_static! {
-    static ref XMLSEC: Mutex<Option<XmlSecContext>> = Mutex::new(None);
-}
+static XMLSEC: Mutex<Option<XmlSecContext>> = Mutex::new(None);
 
 pub fn guarantee_xmlsec_init() {
     let mut inner = XMLSEC
@@ -37,7 +32,6 @@ impl XmlSecContext {
         init_xmlsec();
         init_crypto_app();
         init_crypto();
-
         Self {}
     }
 }

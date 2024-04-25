@@ -7,9 +7,6 @@
 #![deny(clippy::all)]
 #![allow(clippy::new_without_default)] // simply do not agree with this
 
-// imports
-use lazy_static::lazy_static;
-
 #[doc(hidden)]
 pub use libxml::tree::document::Document as XmlDocument;
 #[doc(hidden)]

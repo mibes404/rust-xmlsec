@@ -15,7 +15,6 @@ build = "bindings.rs"
 [dependencies]
 libc        = {version = "^0.2"}
 libxml      = {version = "^0.3"}
-lazy_static = {version = "^1.4"}
 
 [build-dependencies]
 pkg-config = {version = "^0.3"}
