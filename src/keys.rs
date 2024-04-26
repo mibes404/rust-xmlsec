@@ -69,6 +69,19 @@ impl XmlSecKey {
         let cpasswd_ptr = cpasswd.map(|cstr| cstr.as_ptr()).unwrap_or(null());
 
         // Load key from file
+        // todo: the conditional compilation is a bit of a hack; on MacOS there is a new version is libxmlsec that only has the xmlSecOpenSSLAppKeyLoadEx
+        #[cfg(not(target_os = "macos"))]
+        let key = unsafe {
+            bindings::xmlSecOpenSSLAppKeyLoad(
+                cpath.as_ptr(),
+                format as u32,
+                cpasswd_ptr,
+                null_mut(),
+                null_mut(),
+            )
+        };
+
+        #[cfg(target_os = "macos")]
         let key = unsafe {
             bindings::xmlSecOpenSSLAppKeyLoadEx(
                 cpath.as_ptr(),

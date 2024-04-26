@@ -29,6 +29,7 @@ fn main() {
 
         let bindbuild = BindgenBuilder::default()
             .header("bindings.h")
+            .clang_arg("-DXMLSEC_NO_CRYPTO_DYNAMIC_LOADING=1")
             .clang_args(fetch_xmlsec_config_flags())
             .clang_args(fetch_xmlsec_config_libs())
             .layout_tests(true)
@@ -45,8 +46,8 @@ fn main() {
 
 fn fetch_xmlsec_config_flags() -> Vec<String> {
     let out = Command::new("xmlsec1-config")
-        .arg("--crypto=openssl")
         .arg("--cflags")
+        .arg("--crypto=default")
         .output()
         .expect("Failed to get --cflags from xmlsec1-config. Is xmlsec1 installed?")
         .stdout;
@@ -56,8 +57,8 @@ fn fetch_xmlsec_config_flags() -> Vec<String> {
 
 fn fetch_xmlsec_config_libs() -> Vec<String> {
     let out = Command::new("xmlsec1-config")
-        .arg("--crypto=openssl")
         .arg("--libs")
+        .arg("--crypto=default")
         .output()
         .expect("Failed to get --libs from xmlsec1-config. Is xmlsec1 installed?")
         .stdout;
